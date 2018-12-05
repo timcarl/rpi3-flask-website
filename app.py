@@ -1,23 +1,25 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+# https://flask-mysqldb.readthedocs.io/en/latest/
+
 
 from flask import Flask, flash, redirect, url_for, logging, render_template, request, session, abort
-#from flaskext.mysql import  MySQL
+# from flaskext.mysql import  MySQL
 from flask_mysqldb import MySQL
-#import data in the Articles function.
-#from data import Articles
+# import data in the Articles function.
+# from data import Articles
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators
 from passlib.hash import sha256_crypt
 from functools import wraps
 
-#https://flask-mysqldb.readthedocs.io/en/latest/
 
 
 
-#Create an instance of flask called "app"
+
+# Create an instance of flask called "app"
 app = Flask(__name__)
 
-#init MYSQL
+# init MYSQL
 mysql = MySQL(app)
 
 
