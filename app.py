@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # https://flask-mysqldb.readthedocs.io/en/latest/
 
-
+# Import the Flask class
 from flask import Flask, flash, redirect, url_for, logging, render_template, request, session, abort
 # from flaskext.mysql import  MySQL
 from flask_mysqldb import MySQL
@@ -16,7 +16,9 @@ from functools import wraps
 
 
 
-# Create an instance of flask called "app"
+# Create an instance of the Flask Class.
+# First arg is name of apps module or package.
+# When using a single module,__name__ is correct value. Here Flask is single module.
 app = Flask(__name__)
 
 # init MYSQL
@@ -31,20 +33,16 @@ app.config['MYSQL_DB'] = 'myflask'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 
-
-
-
-
-
-#We created a data.py file. Defined fnc() named Article with
+# We created a data.py file. Defined fnc() named Article with
 # an array named articles that has 3 objects.,
-#We create a variable named: Articles equal to the function name used in data.py
+# We create a variable named: Articles equal to the function name used in data.py
+
+# Articles = Articles()
 
 
-#Articles = Articles()
 
-#Creating URL ROUTES:
-#We use a route() decorator to bind a function to a URL.
+# We use route() decorator(s) to bind a function to a URL.
+# A route() decorator informs Flask what URL trigger the function.
 @app.route('/')
 def index():
     return render_template('home.html')
@@ -71,9 +69,11 @@ def articles():
     else:
         msg = 'No Articles Found'
         return render_template('articles.html', msg=msg)
+    
     # Close the connection
     cur.close()
-    return render_template('articles.html', articles= Articles)
+    
+
 
 
 
@@ -85,13 +85,13 @@ def article(id):
     cur = mysql.connection.cursor()
 
     # Get article
-    result = cur.execute("SELECT * FROM articles WHERE id = %s ", [id])
+    result = cur.execute("SELECT * FROM articles WHERE id = %s", [id])
 
     article = cur.fetchone()
 
     
     # We need to pass in the articles(data), so pass in 2nd param.
-    return render_template('article.html', id=id)
+    return render_template('article.html', article=article)
 
 
 # Register Form Class
@@ -110,6 +110,7 @@ class RegisterForm(Form):
 
 
 # User Register
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     #set it equal to the above FORM.
@@ -117,7 +118,7 @@ def register():
     #check if POST request and form is validated.
     if request.method == 'POST' and form.validate():
         #IF only need access to data for KNOWN fields,use: form.<field>.data
-        name = form.username.data
+        name = form.name.data
         email = form.email.data
         username = form.username.data
         password = sha256_crypt.encrypt(str(form.password.data)) 
@@ -159,14 +160,14 @@ def login():
 
         if result > 0:
             # get stored hash
-            data =cur.fetchone()
+            data = cur.fetchone()
             password = data['password']
 
 
             #Compare passwords
             if sha256_crypt.verify(password_candidate, password):
                 #Passed
-                session['loggin_in']=True
+                session['logged_in']=True
                 session['username'] = username
 
                 flash('You are now logged in', 'success')
@@ -188,6 +189,7 @@ def login():
     
 
 #check if user logged in
+
 def is_logged_in(f):
     @wraps(f)
     def wrap(*args, **kwargs):
@@ -198,7 +200,11 @@ def is_logged_in(f):
             return redirect(url_for('login'))
     return wrap
 
+
+
+
 # Logout
+
 @app.route('/logout')
 @is_logged_in
 def logout():
@@ -209,14 +215,17 @@ def logout():
 
 
 #Dashboard
+
 @app.route('/dashboard')
 @is_logged_in
 def dashboard():
+    
     #create cursor
     cur = mysql.connection.cursor()
 
     #Get articles
     result = cur.execute("SELECT * FROM articles")
+    
     # Show articles from only the user logged in
     result = cur.execute("SELECT * FROM articles WHERE author = %s", [session['username']])
 
@@ -229,15 +238,24 @@ def dashboard():
         return render_template('dashboard.html', msg=msg)
         #Close the connection
         cur.close()
-    return render_template('dashboard.html')
+        
+    # This render_template is not in Travasary's code!
+    # return render_template('dashboard.html')
+
+
+
     
 
 #Article Form Class
+
 class ArticleForm(Form):
     title = StringField('Title', [validators.Length(min=1, max=200)])
     body  = TextAreaField('Body', [validators.Length(min=30)])
 
+
+
 #Add Article
+    
 @app.route('/add_article', methods=['GET', 'POST'])
 @is_logged_in
 def add_article():
@@ -268,14 +286,17 @@ def add_article():
 
 
 #Edit Article
+
 @app.route('/edit_article/<string:id>', methods=['GET', 'POST'])
 @is_logged_in
 def edit_article(id):
+    
     cur = mysql.connection.cursor()
 
     result = cur.execute("SELECT * FROM articles WHERE id = %s", [id])
 
     article = fetchone()
+    
     cur.close()
 
     #get form
@@ -291,6 +312,7 @@ def edit_article(id):
 
         #create cursor
         cur = mysql.connection.cursor()
+        
         app.logger.info(title)
 
 
@@ -333,21 +355,7 @@ def delete_article(id):
 
                           
 
-                          
-                
-
-    
-
-
-
-
-
-
-
-
-
-
 if __name__ == "__main__":
-    app.secret_key='secret123'
+    app.secret_key='secretword123'
     app.run(debug=True)
 
